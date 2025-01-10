@@ -8,10 +8,7 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64, arm64]
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -19,15 +16,31 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: "1.23.4"
+          go-version: "1.20"
 
-      - name: Build
+      - name: Build Binaries
         run: |
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o ghmon-${{ matrix.goos }}-${{ matrix.goarch }} ./main.go
+          PLATFORMS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64"
+          for platform in $PLATFORMS; do
+            GOOS=$(echo $platform | cut -d'/' -f1)
+            GOARCH=$(echo $platform | cut -d'/' -f2)
+            
+            # Construct binary name with ghmon prefix
+            BIN_NAME="ghmon-$GOOS-$GOARCH"
+            
+            # On Windows, append .exe
+            if [ "$GOOS" = "windows" ]; then
+              BIN_NAME="$BIN_NAME.exe"
+            fi
 
-      - name: Upload Release
+            echo "Building for $GOOS/$GOARCH -> $BIN_NAME"
+            GOOS=$GOOS GOARCH=$GOARCH go build -o $BIN_NAME .
+          done
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          # Upload all files that start with ghmon-
           files: |
             ghmon-*
         env:
