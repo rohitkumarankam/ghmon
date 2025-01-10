@@ -38,10 +38,22 @@ jobs:
           done
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          # Upload all files that start with ghmon-
-          files: |
-            ghmon-*
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ghmon-*
+          asset_name: ghmon-*
+          asset_content_type: application/octet-stream
