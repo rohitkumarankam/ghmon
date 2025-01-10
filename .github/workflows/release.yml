@@ -7,7 +7,7 @@ on:
       - "v*.*.*"
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,42 +19,12 @@ jobs:
         with:
           go-version: "1.23.4"
 
-      - name: Build Binaries
-        run: |
-          PLATFORMS="darwin/amd64 darwin/arm64 linux/386 linux/amd64 linux/arm linux/arm64 linux/riscv64 windows/386 windows/amd64 windows/arm windows/arm64"
-          for platform in $PLATFORMS; do
-            GOOS=$(echo $platform | cut -d'/' -f1)
-            GOARCH=$(echo $platform | cut -d'/' -f2)
-            
-            # Construct binary name with ghmon prefix
-            BIN_NAME="ghmon-$GOOS-$GOARCH"
-            
-            # On Windows, append .exe
-            if [ "$GOOS" = "windows" ]; then
-              BIN_NAME="$BIN_NAME.exe"
-            fi
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
 
-            echo "Building for $GOOS/$GOARCH -> $BIN_NAME"
-            GOOS=$GOOS GOARCH=$GOARCH go build -o $BIN_NAME .
-          done
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ghmon-*
-          asset_name: ghmon-*
-          asset_content_type: application/octet-stream
+        run: goreleaser release --rm-dist
