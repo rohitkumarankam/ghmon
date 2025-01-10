@@ -34,6 +34,63 @@ type RateLimitInfo struct {
     Reset     string
 }
 
+
+// list users
+func listMembers(org, pat string) error {
+    client := &http.Client{}
+    var rateLimit RateLimitInfo
+
+    // Fetch users in the organization
+    users, err := fetchUsers(client, org, pat, &rateLimit)
+    if err != nil {
+        return fmt.Errorf("fetching org users: %w", err)
+    }
+
+    for _, user := range users {
+        fmt.Printf("%s\n", user)
+    }
+
+    // Print rate limit info before exiting
+    printRateLimitInfo(rateLimit)
+
+    return nil
+}
+
+
+func listAllRepos(org, pat string) error {
+    client := &http.Client{}
+    var rateLimit RateLimitInfo
+
+    // Fetch repositories for the organization
+    repos, err := fetchRepos(client, org, pat, &rateLimit)
+    if err != nil {
+        return fmt.Errorf("fetching org repos: %w", err)
+    }
+    // fetch user repos and merge with org repos
+    users, err := fetchUsers(client, org, pat, &rateLimit)
+    if err != nil {
+        return fmt.Errorf("fetching org users: %w", err)
+    }
+    for _, user := range users {
+        userRepos, err := fetchUserRepos(client, user.Login, pat, &rateLimit)
+        if err != nil {
+            // We skip errors here but log them
+            log.Printf("Error fetching repos for user %s: %v", user.Login, err)
+            continue
+        }
+        repos = append(repos, userRepos...)
+    }
+
+    for _, repo := range repos {
+        fmt.Printf("%s\n", repo)
+    }
+
+    // Print rate limit info before exiting
+    printRateLimitInfo(rateLimit)
+
+    return nil
+}
+
 // run is the main logic invoked by the Cobra command in root.go
 func run(org, webhook, pat string) error {
     client := &http.Client{}
