@@ -11,27 +11,21 @@ import (
 var (
     org     string
     webhook string
+    pat     string
 )
 
 var rootCmd = &cobra.Command{
-    Use:   "myprogram",
-    Short: "A tool to fetch updated GitHub repositories and notify a Google Chat webhook",
-    // The `RunE` can be used if you want to return an error from this command
+    Use: "ghmon",
+    Short: "A tool to monitor GitHub organization and its members’ public repositories and notify on Google Chat",
     Run: func(cmd *cobra.Command, args []string) {
-        pat := os.Getenv("GITHUB_PAT")
         if pat == "" {
-            log.Fatal("Please set the GITHUB_PAT environment variable")
+            pat = os.Getenv("GITHUB_PAT")
         }
-
         if org == "" {
-            log.Fatal("Please provide a GitHub organization name using --org (or -o)")
+            cmd.Help()
+            return
         }
-
-        // if webhook == "" {
-        //     log.Fatal("Please provide a Google Chat webhook URL using --webhook (or -w)")
-        // }
-
-        // Call the actual logic from another function (in run.go)
+        // log.Printf("Using PAT: %q", pat)
         err := run(org, webhook, pat)
         if err != nil {
             log.Fatalf("Error executing command: %v", err)
@@ -39,7 +33,6 @@ var rootCmd = &cobra.Command{
     },
 }
 
-// Execute runs the root command which parses flags, etc.
 func Execute() {
     if err := rootCmd.Execute(); err != nil {
         fmt.Println(err)
@@ -48,6 +41,8 @@ func Execute() {
 }
 
 func init() {
+    log.SetFlags(0)
     rootCmd.Flags().StringVarP(&org, "org", "o", "", "GitHub organization name (required)")
-    rootCmd.Flags().StringVarP(&webhook, "webhook", "w", "", "Google Chat webhook URL (required)")
+    rootCmd.Flags().StringVarP(&webhook, "webhook", "w", "", "Google Chat webhook URL")
+    rootCmd.Flags().StringVarP(&pat, "pat", "p", "", "GitHub personal access token (default: tries to read from GITHUB_PAT environment variable)")
 }
