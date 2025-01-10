@@ -42,7 +42,7 @@ func Execute() {
 
 func init() {
     log.SetFlags(0)
-    rootCmd.Flags().StringVarP(&org, "org", "o", "", "GitHub organization name (required)")
+    rootCmd.PersistentFlags().StringVarP(&org, "org", "o", "", "GitHub organization name (required)")
     rootCmd.Flags().StringVarP(&webhook, "webhook", "w", "", "Google Chat webhook URL")
-    rootCmd.Flags().StringVarP(&pat, "pat", "p", "", "GitHub personal access token (default: tries to read from GITHUB_PAT environment variable)")
+    rootCmd.PersistentFlags().StringVarP(&pat, "pat", "p", "", "GitHub personal access token (default: tries to read from GITHUB_PAT environment variable)")
 }
