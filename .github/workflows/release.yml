@@ -21,7 +21,7 @@ jobs:
 
       - name: Build Binaries
         run: |
-          PLATFORMS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64"
+          PLATFORMS="darwin/amd64 darwin/arm64 linux/386 linux/amd64 linux/arm linux/arm64 linux/riscv64 windows/386 windows/amd64 windows/arm windows/arm64"
           for platform in $PLATFORMS; do
             GOOS=$(echo $platform | cut -d'/' -f1)
             GOARCH=$(echo $platform | cut -d'/' -f2)
